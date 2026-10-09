@@ -5,19 +5,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -27,85 +26,85 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                BanderaButan(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
+                BanderaNepal()
             }
         }
     }
 }
 
 @Composable
-fun BanderaButan(modifier: Modifier = Modifier) {
-    val amarillo = Color(0xFFFFD520)
-    val naranja = Color(0xFFFF4E12)
+fun BanderaNepal(modifier: Modifier = Modifier) {
+    val azulBorde = Color(0xFF003893)
+    val carmesi = Color(0xFFDC143C)
 
-    Canvas(modifier = modifier) {
+    Canvas(modifier = modifier.width(240.dp).height(290.dp)) {
         val w = size.width
         val h = size.height
 
-        drawRect(amarillo)
+        val a1 = Offset(0f, 0f)
+        val a2 = Offset(w * 0.80f, h * 0.40f)
+        val a3 = Offset(0f, h * 0.40f)
 
-        val triNaranja = Path().apply {
-            moveTo(0f, h)
-            lineTo(w, 0f)
-            lineTo(w, h)
+        val b1 = Offset(0f, h * 0.40f)
+        val b2 = Offset(w, h)
+        val b3 = Offset(0f, h)
+
+        fun triangulo(p1: Offset, p2: Offset, p3: Offset) = Path().apply {
+            moveTo(p1.x, p1.y)
+            lineTo(p2.x, p2.y)
+            lineTo(p3.x, p3.y)
             close()
         }
-        drawPath(triNaranja, naranja)
 
-        val puntos = listOf(
-            Offset(w * 0.18f, h * 0.69f),
-            Offset(w * 0.25f, h * 0.40f),
-            Offset(w * 0.35f, h * 0.52f),
-            Offset(w * 0.44f, h * 0.42f),
-            Offset(w * 0.54f, h * 0.54f),
-            Offset(w * 0.64f, h * 0.45f),
-            Offset(w * 0.73f, h * 0.53f),
-            Offset(w * 0.82f, h * 0.41f)
-        )
+        fun incentro(p1: Offset, p2: Offset, p3: Offset): Offset {
+            val l1 = (p2 - p3).getDistance()
+            val l2 = (p1 - p3).getDistance()
+            val l3 = (p1 - p2).getDistance()
+            val s = l1 + l2 + l3
+            return Offset((l1 * p1.x + l2 * p2.x + l3 * p3.x) / s, (l1 * p1.y + l2 * p2.y + l3 * p3.y) / s)
+        }
 
-        val cuerpo = Path().apply {
-            puntos.forEachIndexed { i, p ->
-                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+        val arriba = triangulo(a1, a2, a3)
+        val abajo = triangulo(b1, b2, b3)
+
+        drawPath(arriba, azulBorde)
+        drawPath(abajo, azulBorde)
+
+        scale(0.72f, pivot = incentro(a1, a2, a3)) {
+            drawPath(arriba, carmesi)
+        }
+        scale(0.72f, pivot = incentro(b1, b2, b3)) {
+            drawPath(abajo, carmesi)
+        }
+
+        // Luna
+        val luna = Offset(w * 0.25f, h * 0.27f)
+        drawCircle(Color.White, radius = h * 0.06f, center = luna)
+        drawCircle(carmesi, radius = h * 0.052f, center = Offset(luna.x, luna.y - h * 0.025f))
+
+        // Sol de 12 puntas
+        val sol = Path().apply {
+            val cx = w * 0.30f
+            val cy = h * 0.80f
+            val rExt = h * 0.085f
+            val rInt = rExt * 0.7f
+            for (i in 0 until 24) {
+                val a = -PI / 2 + i * (PI / 12)
+                val r = if (i % 2 == 0) rExt else rInt
+                val x = cx + r * cos(a).toFloat()
+                val y = cy + r * sin(a).toFloat()
+                if (i == 0) moveTo(x, y) else lineTo(x, y)
             }
+            close()
         }
-        drawPath(cuerpo, Color.White, style = Stroke(h * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Miter))
-
-        val pua = Path().apply {
-            moveTo(w * 0.82f, h * 0.41f)
-            lineTo(w * 0.88f, h * 0.36f)
-        }
-        drawPath(pua, Color.White, style = Stroke(h * 0.03f, cap = StrokeCap.Round))
-
-        val estrellas = listOf(
-            Offset(w * 0.25f, h * 0.40f),
-            Offset(w * 0.44f, h * 0.42f),
-            Offset(w * 0.64f, h * 0.45f),
-            Offset(w * 0.82f, h * 0.41f)
-        )
-
-        estrellas.forEach { pos ->
-            drawCircle(Color.White, radius = h * 0.055f, center = pos)
-            val est = Path().apply {
-                val r1 = h * 0.04f
-                val r2 = r1 * 0.4f
-                for (i in 0 until 10) {
-                    val a = -PI / 2 + i * (PI / 5)
-                    val r = if (i % 2 == 0) r1 else r2
-                    val x = pos.x + r * cos(a).toFloat()
-                    val y = pos.y + r * sin(a).toFloat()
-                    if (i == 0) moveTo(x, y) else lineTo(x, y)
-                }
-                close()
-            }
-            drawPath(est, amarillo)
-        }
+        drawPath(sol, Color.White)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun BanderaButanPreview() {
+fun BanderaNepalPreview() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        BanderaButan(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
+        BanderaNepal()
     }
 }
