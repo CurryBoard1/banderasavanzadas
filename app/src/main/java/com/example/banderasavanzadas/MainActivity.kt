@@ -12,83 +12,100 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                BanderaSudafrica(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
+                BanderaButan(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
             }
         }
     }
 }
 
 @Composable
-fun BanderaSudafrica(modifier: Modifier = Modifier) {
+fun BanderaButan(modifier: Modifier = Modifier) {
+    val amarillo = Color(0xFFFFD520)
+    val naranja = Color(0xFFFF4E12)
+
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val cy = h / 2f
 
-        val rojo = Color(0xFFDE3831)
-        val azul = Color(0xFF002395)
-        val verde = Color(0xFF007A4D)
-        val dorado = Color(0xFFFFB612)
+        drawRect(amarillo)
 
-        val arriba = Offset(0f, 0f)
-        val abajo = Offset(0f, h)
-        val union = Offset(h * 0.54f, cy)
-        val derecha = Offset(w, cy)
+        val triNaranja = Path().apply {
+            moveTo(0f, h)
+            lineTo(w, 0f)
+            lineTo(w, h)
+            close()
+        }
+        drawPath(triNaranja, naranja)
 
-        clipRect {
-            // Fondo superior rojo e inferior azul
-            drawRect(color = rojo, size = Size(w, cy))
-            drawRect(color = azul, topLeft = Offset(0f, cy), size = Size(w, h - cy))
+        val puntos = listOf(
+            Offset(w * 0.18f, h * 0.69f),
+            Offset(w * 0.25f, h * 0.40f),
+            Offset(w * 0.35f, h * 0.52f),
+            Offset(w * 0.44f, h * 0.42f),
+            Offset(w * 0.54f, h * 0.54f),
+            Offset(w * 0.64f, h * 0.45f),
+            Offset(w * 0.73f, h * 0.53f),
+            Offset(w * 0.82f, h * 0.41f)
+        )
 
-            // Y blanca
-            val grosorBlanco = h * 0.30f
-            drawLine(Color.White, arriba, union, grosorBlanco, cap = StrokeCap.Round)
-            drawLine(Color.White, abajo, union, grosorBlanco, cap = StrokeCap.Round)
-            drawLine(Color.White, union, derecha, grosorBlanco, cap = StrokeCap.Round)
+        val cuerpo = Path().apply {
+            puntos.forEachIndexed { i, p ->
+                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+            }
+        }
+        drawPath(cuerpo, Color.White, style = Stroke(h * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Miter))
 
-            // Y verde
-            val grosorVerde = h * 0.20f
-            drawLine(verde, arriba, union, grosorVerde, cap = StrokeCap.Round)
-            drawLine(verde, abajo, union, grosorVerde, cap = StrokeCap.Round)
-            drawLine(verde, union, derecha, grosorVerde, cap = StrokeCap.Round)
+        val pua = Path().apply {
+            moveTo(w * 0.82f, h * 0.41f)
+            lineTo(w * 0.88f, h * 0.36f)
+        }
+        drawPath(pua, Color.White, style = Stroke(h * 0.03f, cap = StrokeCap.Round))
 
-            // Triángulo dorado
-            val trianguloDorado = Path().apply {
-                moveTo(0f, h * 0.136f)
-                lineTo(h * 0.393f, cy)
-                lineTo(0f, h * 0.864f)
+        val estrellas = listOf(
+            Offset(w * 0.25f, h * 0.40f),
+            Offset(w * 0.44f, h * 0.42f),
+            Offset(w * 0.64f, h * 0.45f),
+            Offset(w * 0.82f, h * 0.41f)
+        )
+
+        estrellas.forEach { pos ->
+            drawCircle(Color.White, radius = h * 0.055f, center = pos)
+            val est = Path().apply {
+                val r1 = h * 0.04f
+                val r2 = r1 * 0.4f
+                for (i in 0 until 10) {
+                    val a = -PI / 2 + i * (PI / 5)
+                    val r = if (i % 2 == 0) r1 else r2
+                    val x = pos.x + r * cos(a).toFloat()
+                    val y = pos.y + r * sin(a).toFloat()
+                    if (i == 0) moveTo(x, y) else lineTo(x, y)
+                }
                 close()
             }
-            drawPath(trianguloDorado, color = dorado)
-
-            // Triángulo negro
-            val trianguloNegro = Path().apply {
-                moveTo(0f, h * 0.204f)
-                lineTo(h * 0.320f, cy)
-                lineTo(0f, h * 0.796f)
-                close()
-            }
-            drawPath(trianguloNegro, color = Color.Black)
+            drawPath(est, amarillo)
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun BanderaSudafricaPreview() {
+fun BanderaButanPreview() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        BanderaSudafrica(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
+        BanderaButan(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
     }
 }
