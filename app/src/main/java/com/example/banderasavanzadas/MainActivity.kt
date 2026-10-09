@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,9 +18,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.banderasavanzadas.ui.theme.BanderasavanzadasTheme
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -31,17 +30,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BanderasavanzadasTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold { padding ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding),
+                            .padding(padding),
                         contentAlignment = Alignment.Center
                     ) {
-                        BanderaIsrael(
+                        BanderaCuba(
                             modifier = Modifier
                                 .fillMaxWidth(0.9f)
-                                .aspectRatio(11f / 8f)
+                                .aspectRatio(2f)
                         )
                     }
                 }
@@ -51,63 +50,56 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun BanderaIsrael(modifier: Modifier = Modifier) {
+fun BanderaCuba(modifier: Modifier = Modifier) {
+    val azul = Color(0xFF002E6E)
+    val rojo = Color(0xFFCB1428)
+
     Canvas(modifier = modifier) {
-        val width = size.width
-        val height = size.height
-        val blueColor = Color(0xFF0038B8)
+        val w = size.width
+        val h = size.height
+        val altoFranja = h / 5f
 
-        drawRect(color = Color.White)
+        drawRect(Color.White)
 
-        val margin = height * 0.09f
-        val stripeHeight = height * 0.16f
+        // Franjas azules
+        for (i in 0..4 step 2) {
+            drawRect(
+                color = azul,
+                topLeft = Offset(0f, i * altoFranja),
+                size = Size(w, altoFranja)
+            )
+        }
 
-        drawRect(
-            color = blueColor,
-            topLeft = Offset(0f, margin),
-            size = Size(width, stripeHeight)
-        )
-        drawRect(
-            color = blueColor,
-            topLeft = Offset(0f, height - margin - stripeHeight),
-            size = Size(width, stripeHeight)
-        )
+        // Triángulo rojo
+        val anchoTriangulo = h * 0.866f
+        val triangulo = Path().apply {
+            moveTo(0f, 0f)
+            lineTo(anchoTriangulo, h / 2f)
+            lineTo(0f, h)
+            close()
+        }
+        drawPath(triangulo, color = rojo)
 
-        val centerX = width / 2f
-        val centerY = height / 2f
-        val radius = height * 0.21f
-        val strokeWidth = Stroke(width = height * 0.035f)
-
-        drawPath(
-            path = crearTrianguloPath(centerX, centerY, radius, -90f),
-            color = blueColor,
-            style = strokeWidth
-        )
-        drawPath(
-            path = crearTrianguloPath(centerX, centerY, radius, 90f),
-            color = blueColor,
-            style = strokeWidth
-        )
+        // Estrella blanca
+        val cx = anchoTriangulo / 3f
+        val cy = h / 2f
+        val radioEstrella = h * 0.13f
+        drawPath(dibujarEstrella(cx, cy, radioEstrella), color = Color.White)
     }
 }
 
-private fun crearTrianguloPath(
-    centerX: Float,
-    centerY: Float,
-    radius: Float,
-    rotacionGrados: Float
-): Path {
+private fun dibujarEstrella(cx: Float, cy: Float, r: Float): Path {
     val path = Path()
-    for (i in 0..2) {
-        val anguloRad = Math.toRadians((rotacionGrados + i * 120).toDouble())
-        val x = centerX + radius * cos(anguloRad).toFloat()
-        val y = centerY + radius * sin(anguloRad).toFloat()
+    val rInterior = r * 0.4f
+    val anguloInicial = -PI / 2
 
-        if (i == 0) {
-            path.moveTo(x, y)
-        } else {
-            path.lineTo(x, y)
-        }
+    for (i in 0 until 10) {
+        val radioActual = if (i % 2 == 0) r else rInterior
+        val angulo = anguloInicial + i * (PI / 5)
+        val x = cx + radioActual * cos(angulo).toFloat()
+        val y = cy + radioActual * sin(angulo).toFloat()
+
+        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
     }
     path.close()
     return path
@@ -115,19 +107,17 @@ private fun crearTrianguloPath(
 
 @Preview(showBackground = true)
 @Composable
-fun BanderaIsraelPreview() {
+fun BanderaCubaPreview() {
     BanderasavanzadasTheme {
-        Surface {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                BanderaIsrael(
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .aspectRatio(11f / 8f)
-                )
-            }
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            BanderaCuba(
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .aspectRatio(2f)
+            )
         }
     }
 }
