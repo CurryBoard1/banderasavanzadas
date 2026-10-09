@@ -16,8 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.banderasavanzadas.ui.theme.BanderasavanzadasTheme
 import kotlin.math.cos
@@ -36,10 +38,10 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding),
                         contentAlignment = Alignment.Center
                     ) {
-                        BanderaTurquia(
+                        BanderaIsrael(
                             modifier = Modifier
                                 .fillMaxWidth(0.9f)
-                                .aspectRatio(3f / 2f)
+                                .aspectRatio(11f / 8f)
                         )
                     }
                 }
@@ -49,64 +51,57 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun BanderaTurquia(modifier: Modifier = Modifier) {
+fun BanderaIsrael(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val width = size.width
         val height = size.height
-        val redColor = Color(0xFFE30A17)
+        val blueColor = Color(0xFF0038B8)
+
+        drawRect(color = Color.White)
+
+        val margin = height * 0.09f
+        val stripeHeight = height * 0.16f
+
+        drawRect(
+            color = blueColor,
+            topLeft = Offset(0f, margin),
+            size = Size(width, stripeHeight)
+        )
+        drawRect(
+            color = blueColor,
+            topLeft = Offset(0f, height - margin - stripeHeight),
+            size = Size(width, stripeHeight)
+        )
+
+        val centerX = width / 2f
         val centerY = height / 2f
-
-        drawRect(color = redColor)
-
-        val outerRadius = height * 0.25f
-        val innerRadius = height * 0.20f
-        val crescentCenterX = width * 0.35f
-        val innerCenterX = crescentCenterX + (height * 0.0625f)
-
-        drawCircle(
-            color = Color.White,
-            radius = outerRadius,
-            center = Offset(crescentCenterX, centerY)
-        )
-        drawCircle(
-            color = redColor,
-            radius = innerRadius,
-            center = Offset(innerCenterX, centerY)
-        )
-
-        val starCenterX = crescentCenterX + (height * 0.375f)
-        val starRadius = height * 0.125f
+        val radius = height * 0.21f
+        val strokeWidth = Stroke(width = height * 0.035f)
 
         drawPath(
-            path = crearEstrella(
-                centerX = starCenterX,
-                centerY = centerY,
-                radio = starRadius,
-                puntas = 5,
-                rotacion = 180f
-            ),
-            color = Color.White
+            path = crearTrianguloPath(centerX, centerY, radius, -90f),
+            color = blueColor,
+            style = strokeWidth
+        )
+        drawPath(
+            path = crearTrianguloPath(centerX, centerY, radius, 90f),
+            color = blueColor,
+            style = strokeWidth
         )
     }
 }
 
-private fun crearEstrella(
+private fun crearTrianguloPath(
     centerX: Float,
     centerY: Float,
-    radio: Float,
-    puntas: Int = 5,
-    rotacion: Float = 180f,
-    proporcionInterior: Float = 0.382f
+    radius: Float,
+    rotacionGrados: Float
 ): Path {
     val path = Path()
-    val totalPuntos = puntas * 2
-    val pasoAngulo = 180.0 / puntas
-
-    for (i in 0 until totalPuntos) {
-        val r = if (i % 2 == 0) radio else radio * proporcionInterior
-        val anguloRad = Math.toRadians(rotacion + i * pasoAngulo)
-        val x = centerX + r * cos(anguloRad).toFloat()
-        val y = centerY + r * sin(anguloRad).toFloat()
+    for (i in 0..2) {
+        val anguloRad = Math.toRadians((rotacionGrados + i * 120).toDouble())
+        val x = centerX + radius * cos(anguloRad).toFloat()
+        val y = centerY + radius * sin(anguloRad).toFloat()
 
         if (i == 0) {
             path.moveTo(x, y)
@@ -120,17 +115,17 @@ private fun crearEstrella(
 
 @Preview(showBackground = true)
 @Composable
-fun BanderaTurquiaPreview() {
+fun BanderaIsraelPreview() {
     BanderasavanzadasTheme {
         Surface {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                BanderaTurquia(
+                BanderaIsrael(
                     modifier = Modifier
                         .fillMaxWidth(0.9f)
-                        .aspectRatio(3f / 2f)
+                        .aspectRatio(11f / 8f)
                 )
             }
         }
