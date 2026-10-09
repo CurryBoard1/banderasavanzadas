@@ -14,84 +14,81 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.tooling.preview.Preview
-import kotlin.math.hypot
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                BanderaReinoUnido(Modifier.fillMaxWidth().aspectRatio(2f))
+                BanderaSudafrica(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
             }
         }
     }
 }
 
 @Composable
-fun BanderaReinoUnido(modifier: Modifier = Modifier) {
+fun BanderaSudafrica(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val azul = Color(0xFF012169)
-        val rojo = Color(0xFFC8102E)
-        val centro = Offset(w / 2f, h / 2f)
+        val cy = h / 2f
+
+        val rojo = Color(0xFFDE3831)
+        val azul = Color(0xFF002395)
+        val verde = Color(0xFF007A4D)
+        val dorado = Color(0xFFFFB612)
+
+        val arriba = Offset(0f, 0f)
+        val abajo = Offset(0f, h)
+        val union = Offset(h * 0.54f, cy)
+        val derecha = Offset(w, cy)
 
         clipRect {
-            // Fondo azul
-            drawRect(azul)
+            // Fondo superior rojo e inferior azul
+            drawRect(color = rojo, size = Size(w, cy))
+            drawRect(color = azul, topLeft = Offset(0f, cy), size = Size(w, h - cy))
 
-            // Diagonales blancas
-            val grosorBlanca = h * 0.20f
-            drawLine(Color.White, Offset(0f, 0f), Offset(w, h), grosorBlanca)
-            drawLine(Color.White, Offset(w, 0f), Offset(0f, h), grosorBlanca)
+            // Y blanca
+            val grosorBlanco = h * 0.30f
+            drawLine(Color.White, arriba, union, grosorBlanco, cap = StrokeCap.Round)
+            drawLine(Color.White, abajo, union, grosorBlanco, cap = StrokeCap.Round)
+            drawLine(Color.White, union, derecha, grosorBlanco, cap = StrokeCap.Round)
 
-            // Diagonales rojas (asimétricas)
-            val largo = hypot(w, h)
-            val corrimiento = h * 0.033f
-            val grosorRoja = h * 0.067f
-            val p1 = Offset(-h / largo, w / largo) * corrimiento
-            val p2 = Offset(h / largo, w / largo) * corrimiento
+            // Y verde
+            val grosorVerde = h * 0.20f
+            drawLine(verde, arriba, union, grosorVerde, cap = StrokeCap.Round)
+            drawLine(verde, abajo, union, grosorVerde, cap = StrokeCap.Round)
+            drawLine(verde, union, derecha, grosorVerde, cap = StrokeCap.Round)
 
-            drawLine(rojo, centro + p1, Offset(0f, 0f) + p1, grosorRoja)
-            drawLine(rojo, centro - p1, Offset(w, h) - p1, grosorRoja)
-            drawLine(rojo, centro - p2, Offset(w, 0f) - p2, grosorRoja)
-            drawLine(rojo, centro + p2, Offset(0f, h) + p2, grosorRoja)
+            // Triángulo dorado
+            val trianguloDorado = Path().apply {
+                moveTo(0f, h * 0.136f)
+                lineTo(h * 0.393f, cy)
+                lineTo(0f, h * 0.864f)
+                close()
+            }
+            drawPath(trianguloDorado, color = dorado)
 
-            // Cruz blanca
-            val anchoBlanca = h * 0.333f
-            drawRect(
-                Color.White,
-                topLeft = Offset(0f, centro.y - anchoBlanca / 2f),
-                size = Size(w, anchoBlanca)
-            )
-            drawRect(
-                Color.White,
-                topLeft = Offset(centro.x - anchoBlanca / 2f, 0f),
-                size = Size(anchoBlanca, h)
-            )
-
-            // Cruz roja
-            val anchoRoja = h * 0.20f
-            drawRect(
-                rojo,
-                topLeft = Offset(0f, centro.y - anchoRoja / 2f),
-                size = Size(w, anchoRoja)
-            )
-            drawRect(
-                rojo,
-                topLeft = Offset(centro.x - anchoRoja / 2f, 0f),
-                size = Size(anchoRoja, h)
-            )
+            // Triángulo negro
+            val trianguloNegro = Path().apply {
+                moveTo(0f, h * 0.204f)
+                lineTo(h * 0.320f, cy)
+                lineTo(0f, h * 0.796f)
+                close()
+            }
+            drawPath(trianguloNegro, color = Color.Black)
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun BanderaReinoUnidoPreview() {
+fun BanderaSudafricaPreview() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        BanderaReinoUnido(Modifier.fillMaxWidth().aspectRatio(2f))
+        BanderaSudafrica(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
     }
 }
