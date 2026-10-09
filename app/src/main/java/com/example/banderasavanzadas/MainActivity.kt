@@ -1,123 +1,73 @@
-package com.example.banderasavanzadas
+package com.example.banderascompose
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.banderasavanzadas.ui.theme.BanderasavanzadasTheme
-import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            BanderasavanzadasTheme {
-                Scaffold { padding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        BanderaCuba(
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .aspectRatio(2f)
-                        )
-                    }
-                }
-            }
-        }
-    }
+// Busca donde choca con el borde (arriba o derecha) un rayo que sale de la
+// esquina de abajo a la izquierda con cierto angulo (0 = horizontal, 90 = vertical)
+private fun puntoEnBorde(w: Float, h: Float, grados: Float): Offset {
+    val a = Math.toRadians(grados.toDouble())
+    val dx = cos(a).toFloat()
+    val dy = sin(a).toFloat()
+    // distancia que habria que recorrer para llegar al borde derecho y al de arriba
+    val haciaDerecha = if (dx > 0.0001f) w / dx else Float.MAX_VALUE
+    val haciaArriba = if (dy > 0.0001f) h / dy else Float.MAX_VALUE
+    val t = minOf(haciaDerecha, haciaArriba)
+    return Offset(dx * t, h - dy * t)
 }
 
 @Composable
-fun BanderaCuba(modifier: Modifier = Modifier) {
-    val azul = Color(0xFF002E6E)
-    val rojo = Color(0xFFCB1428)
-
-    Canvas(modifier = modifier) {
+fun BanderaSeychelles(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
-        val altoFranja = h / 5f
 
-        drawRect(Color.White)
+        val azul = Color(0xFF003F87)
+        val amarillo = Color(0xFFFCD856)
+        val rojo = Color(0xFFD62828)
+        val verde = Color(0xFF007A3D)
 
-        // Franjas azules
-        for (i in 0..4 step 2) {
-            drawRect(
-                color = azul,
-                topLeft = Offset(0f, i * altoFranja),
-                size = Size(w, altoFranja)
-            )
+        val origen = Offset(0f, h)
+        val colores = listOf(azul, amarillo, rojo, Color.White, verde)
+        // 5 franjas = 6 bordes, repartidos parejo entre 90 y 0 grados
+        val angulos = listOf(90f, 72f, 54f, 36f, 18f, 0f)
+
+        for (i in 0 until 5) {
+            val a = puntoEnBorde(w, h, angulos[i])
+            val b = puntoEnBorde(w, h, angulos[i + 1])
+            val franja = Path().apply {
+                moveTo(origen.x, origen.y)
+                lineTo(a.x, a.y)
+                // si un rayo pega arriba y el otro a la derecha hay que pasar por la esquina
+                if (a.y < 1f && b.x > w - 1f) lineTo(w, 0f)
+                lineTo(b.x, b.y)
+                close()
+            }
+            drawPath(franja, color = colores[i])
         }
-
-        // Triángulo rojo
-        val anchoTriangulo = h * 0.866f
-        val triangulo = Path().apply {
-            moveTo(0f, 0f)
-            lineTo(anchoTriangulo, h / 2f)
-            lineTo(0f, h)
-            close()
-        }
-        drawPath(triangulo, color = rojo)
-
-        // Estrella blanca
-        val cx = anchoTriangulo / 3f
-        val cy = h / 2f
-        val radioEstrella = h * 0.13f
-        drawPath(dibujarEstrella(cx, cy, radioEstrella), color = Color.White)
     }
-}
-
-private fun dibujarEstrella(cx: Float, cy: Float, r: Float): Path {
-    val path = Path()
-    val rInterior = r * 0.4f
-    val anguloInicial = -PI / 2
-
-    for (i in 0 until 10) {
-        val radioActual = if (i % 2 == 0) r else rInterior
-        val angulo = anguloInicial + i * (PI / 5)
-        val x = cx + radioActual * cos(angulo).toFloat()
-        val y = cy + radioActual * sin(angulo).toFloat()
-
-        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-    }
-    path.close()
-    return path
 }
 
 @Preview(showBackground = true)
 @Composable
-fun BanderaCubaPreview() {
-    BanderasavanzadasTheme {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            BanderaCuba(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .aspectRatio(2f)
-            )
+fun BanderaSeychellesPreview() {
+    Surface {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            BanderaSeychelles(Modifier.fillMaxWidth().aspectRatio(2f))
         }
     }
 }
+
