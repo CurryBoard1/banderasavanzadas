@@ -5,18 +5,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -26,85 +27,102 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                BanderaNepal()
+                BanderaKiribati(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
             }
         }
     }
 }
 
 @Composable
-fun BanderaNepal(modifier: Modifier = Modifier) {
-    val azulBorde = Color(0xFF003893)
-    val carmesi = Color(0xFFDC143C)
+fun BanderaKiribati(modifier: Modifier = Modifier) {
+    val rojo = Color(0xFFCE1126)
+    val azul = Color(0xFF003893)
+    val dorado = Color(0xFFFCD116)
 
-    Canvas(modifier = modifier.width(240.dp).height(290.dp)) {
+    Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
+        val cy = h / 2f
+        val cx = w / 2f
 
-        val a1 = Offset(0f, 0f)
-        val a2 = Offset(w * 0.80f, h * 0.40f)
-        val a3 = Offset(0f, h * 0.40f)
+        clipRect {
+            drawRect(rojo, size = Size(w, cy))
+            drawRect(azul, topLeft = Offset(0f, cy), size = Size(w, h - cy))
 
-        val b1 = Offset(0f, h * 0.40f)
-        val b2 = Offset(w, h)
-        val b3 = Offset(0f, h)
+            val stripeH = cy / 6f
+            val amp = stripeH * 0.35f
+            val numPicos = 10
 
-        fun triangulo(p1: Offset, p2: Offset, p3: Offset) = Path().apply {
-            moveTo(p1.x, p1.y)
-            lineTo(p2.x, p2.y)
-            lineTo(p3.x, p3.y)
-            close()
-        }
+            for (k in 0..2) {
+                val yBase = cy + (k * 2) * stripeH
+                val ola = Path()
 
-        fun incentro(p1: Offset, p2: Offset, p3: Offset): Offset {
-            val l1 = (p2 - p3).getDistance()
-            val l2 = (p1 - p3).getDistance()
-            val l3 = (p1 - p2).getDistance()
-            val s = l1 + l2 + l3
-            return Offset((l1 * p1.x + l2 * p2.x + l3 * p3.x) / s, (l1 * p1.y + l2 * p2.y + l3 * p3.y) / s)
-        }
+                for (i in 0..numPicos) {
+                    val x = w * i / numPicos
+                    val dy = if (i % 2 == 0) 0f else amp
+                    val y = yBase + dy
+                    if (i == 0) ola.moveTo(x, y) else ola.lineTo(x, y)
+                }
 
-        val arriba = triangulo(a1, a2, a3)
-        val abajo = triangulo(b1, b2, b3)
+                for (i in numPicos downTo 0) {
+                    val x = w * i / numPicos
+                    val dy = if (i % 2 == 0) 0f else amp
+                    val y = yBase + stripeH + dy
+                    ola.lineTo(x, y)
+                }
 
-        drawPath(arriba, azulBorde)
-        drawPath(abajo, azulBorde)
-
-        scale(0.72f, pivot = incentro(a1, a2, a3)) {
-            drawPath(arriba, carmesi)
-        }
-        scale(0.72f, pivot = incentro(b1, b2, b3)) {
-            drawPath(abajo, carmesi)
-        }
-
-        // Luna
-        val luna = Offset(w * 0.25f, h * 0.27f)
-        drawCircle(Color.White, radius = h * 0.06f, center = luna)
-        drawCircle(carmesi, radius = h * 0.052f, center = Offset(luna.x, luna.y - h * 0.025f))
-
-        // Sol de 12 puntas
-        val sol = Path().apply {
-            val cx = w * 0.30f
-            val cy = h * 0.80f
-            val rExt = h * 0.085f
-            val rInt = rExt * 0.7f
-            for (i in 0 until 24) {
-                val a = -PI / 2 + i * (PI / 12)
-                val r = if (i % 2 == 0) rExt else rInt
-                val x = cx + r * cos(a).toFloat()
-                val y = cy + r * sin(a).toFloat()
-                if (i == 0) moveTo(x, y) else lineTo(x, y)
+                ola.close()
+                drawPath(ola, Color.White)
             }
-            close()
+
+            val rSol = h * 0.14f
+            drawArc(
+                color = dorado,
+                startAngle = 180f,
+                sweepAngle = 180f,
+                useCenter = true,
+                topLeft = Offset(cx - rSol, cy - rSol),
+                size = Size(rSol * 2f, rSol * 2f)
+            )
+
+            val numRayos = 15
+            val r1 = rSol * 1.15f
+            val r2 = rSol * 1.65f
+
+            for (i in 0 until numRayos) {
+                val ang = PI - (i * (PI / (numRayos - 1))) + (if (i % 2 == 0) 0.02 else -0.02)
+                val x1 = cx + r1 * cos(ang).toFloat()
+                val y1 = cy - r1 * sin(ang).toFloat()
+                val x2 = cx + r2 * cos(ang).toFloat()
+                val y2 = cy - r2 * sin(ang).toFloat()
+
+                drawLine(
+                    color = dorado,
+                    start = Offset(x1, y1),
+                    end = Offset(x2, y2),
+                    strokeWidth = h * 0.028f,
+                    cap = StrokeCap.Butt
+                )
+            }
+
+            val aveY = h * 0.18f
+            val ave = Path().apply {
+                moveTo(cx, aveY - h * 0.07f)
+                quadraticTo(cx - w * 0.08f, aveY - h * 0.05f, cx - w * 0.18f, aveY + h * 0.02f)
+                quadraticTo(cx - w * 0.08f, aveY, cx, aveY - h * 0.02f)
+                quadraticTo(cx + w * 0.08f, aveY, cx + w * 0.18f, aveY + h * 0.02f)
+                quadraticTo(cx + w * 0.08f, aveY - h * 0.05f, cx, aveY - h * 0.07f)
+                close()
+            }
+            drawPath(ave, dorado)
         }
-        drawPath(sol, Color.White)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun BanderaNepalPreview() {
+fun BanderaKiribatiPreview() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        BanderaNepal()
+        BanderaKiribati(Modifier.fillMaxWidth().aspectRatio(3f / 2f))
     }
 }
